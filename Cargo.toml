@@ -1,0 +1,13 @@
+[package]
+name = "metricator"
+version = "0.0.1"
+edition = "2021"
+license = "MIT"
+description = "Metrics"
+repository = "https://github.com/piot/metricator"
+
+[dependencies]
+num-traits = "^0.2"
+
+[dev-dependencies]
+test-log = "^0.2.16"
