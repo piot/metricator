@@ -1,3 +1,5 @@
+use monotonic_time_rs::Millis;
+use monotonic_time_rs::MillisDuration;
 /*
  * Copyright (c) Peter Bjorklund. All rights reserved. https://github.com/piot/metricator
  * Licensed under the MIT License. See LICENSE in the project root for license information.
@@ -7,15 +9,14 @@ use num_traits::ToPrimitive;
 use std::cmp::PartialOrd;
 use std::fmt::Debug;
 use std::ops::{Add, Div};
-use std::time::Instant;
 
 /// Evaluating how many times something occurs every second.
 #[derive(Debug)]
 pub struct RateMetric {
     count: u32,
-    last_calculated_at: Instant,
+    last_calculated_at: Millis,
     average: f32,
-    measurement_interval: f32,
+    measurement_interval: MillisDuration,
 }
 
 impl RateMetric {
@@ -23,16 +24,26 @@ impl RateMetric {
     ///
     /// # Arguments
     ///
-    /// * `time` - The initial `Instant` from which time tracking starts.
+    /// * `time` - The initial [`Millis`] from which time tracking starts.
     ///
     /// # Returns
     ///
     /// A `RateMetric` instance with an initialized count and time.
-    pub fn new(time: Instant) -> Self {
+    pub fn new(time: Millis) -> Self {
         Self {
             count: 0,
             last_calculated_at: time,
-            measurement_interval: 0.5,
+            measurement_interval: MillisDuration::from_millis(500),
+            average: 0.0,
+        }
+    }
+
+    pub fn with_interval(time: Millis, measurement_interval: f32) -> Self {
+        Self {
+            count: 0,
+            last_calculated_at: time,
+            measurement_interval: MillisDuration::from_secs(measurement_interval)
+                .expect("measurement interval should be positive"),
             average: 0.0,
         }
     }
@@ -57,18 +68,17 @@ impl RateMetric {
     ///
     /// # Arguments
     ///
-    /// * `time` - The current `Instant` representing the time at which the update is triggered.
+    /// * `time` - The current [`Millis`] representing the time at which the update is triggered.
     ///
     /// If the elapsed time since the last calculation is less than the measurement interval,
     /// this method returns early without updating the rate.
-    pub fn update(&mut self, time: Instant) {
+    pub fn update(&mut self, time: Millis) {
         let elapsed_time = time - self.last_calculated_at;
-        let seconds = elapsed_time.as_secs_f32();
-        if seconds < self.measurement_interval {
+        if elapsed_time < self.measurement_interval {
             return;
         }
 
-        let rate = self.count as f32 / seconds;
+        let rate = self.count as f32 / elapsed_time.as_secs();
 
         // Reset the counter and start time for the next period
         self.count = 0;

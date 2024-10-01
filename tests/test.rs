@@ -3,18 +3,17 @@
  * Licensed under the MIT License. See LICENSE in the project root for license information.
  */
 
-use std::time::{Duration, Instant};
-
 use metricator::{AggregateMetric, RateMetric};
+use monotonic_time_rs::{Millis, MillisDuration};
 
 #[test_log::test]
 fn rate() {
-    let mut now = Instant::now();
+    let mut now = Millis::new(0);
     let mut m = RateMetric::new(now);
 
     m.add(10);
 
-    now += Duration::from_secs(10);
+    now += MillisDuration::from_secs(10.0).expect("should be positive");
 
     assert_eq!(m.rate(), 0.0);
 
