@@ -16,11 +16,22 @@ pub struct MinMaxAvg<T: Display> {
     pub min: T,
     pub avg: f32,
     pub max: T,
+    pub unit: &'static str,
 }
 
 impl<T: Display> MinMaxAvg<T> {
     pub const fn new(min: T, avg: f32, max: T) -> Self {
-        Self { min, avg, max }
+        Self {
+            min,
+            avg,
+            max,
+            unit: "",
+        }
+    }
+
+    pub fn with_unit(mut self, unit: &'static str) -> Self {
+        self.unit = unit;
+        self
     }
 }
 
@@ -28,8 +39,8 @@ impl<T: Display> Display for MinMaxAvg<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "min:{}/s, avg:{}/s, max:{}/s",
-            self.min, self.avg, self.max
+            "min:{}{}, avg:{}{}, max:{}{}",
+            self.min, self.unit, self.avg, self.unit, self.max, self.unit,
         )
     }
 }
@@ -127,6 +138,7 @@ pub struct AggregateMetric<T> {
     min_ack: T,
     avg: f32,
     avg_is_set: bool,
+    unit: &'static str,
 }
 
 impl<T> AggregateMetric<T>
@@ -157,8 +169,14 @@ where
                 min_ack: T::max_value(),
                 avg: 0.0,
                 avg_is_set: false,
+                unit: "",
             })
         }
+    }
+
+    pub fn with_unit(mut self, unit: &'static str) -> Self {
+        self.unit = unit;
+        self
     }
 
     /// Calculates the mean value, returning `None` if no values have been added.
@@ -203,7 +221,7 @@ where
     /// Returns the minimum, average, and maximum values as a tuple, if available.
     pub fn values(&self) -> Option<MinMaxAvg<T>> {
         if self.avg_is_set {
-            Some(MinMaxAvg::new(self.min, self.avg, self.max))
+            Some(MinMaxAvg::new(self.min, self.avg, self.max).with_unit(self.unit))
         } else {
             None
         }
