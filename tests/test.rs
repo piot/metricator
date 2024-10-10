@@ -3,7 +3,7 @@
  * Licensed under the MIT License. See LICENSE in the project root for license information.
  */
 
-use metricator::{AggregateMetric, RateMetric};
+use metricator::{AggregateMetric, MinMaxAvg, RateMetric};
 use monotonic_time_rs::{Millis, MillisDuration};
 
 #[test_log::test]
@@ -66,9 +66,9 @@ fn min_max_values() {
     aggregate.add(8);
 
     let values = aggregate.values().expect("should calculate values");
-    assert_eq!(values.0, 2); // min
-    assert_eq!(values.1, 5.0); // average
-    assert_eq!(values.2, 8); // max
+    assert_eq!(values.min, 2);
+    assert_eq!(values.avg, 5.0);
+    assert_eq!(values.max, 8);
 }
 
 #[test_log::test]
@@ -80,7 +80,7 @@ fn all_equal_values_f32() {
     aggregate.add(5.0);
 
     assert_eq!(aggregate.average(), Some(5.0));
-    assert_eq!(aggregate.values(), Some((5.0, 5.0, 5.0)));
+    assert_eq!(aggregate.values(), Some(MinMaxAvg::new(5.0, 5.0, 5.0)));
 }
 
 #[test_log::test]
@@ -92,5 +92,5 @@ fn all_equal_values_i32() {
     aggregate.add(7);
 
     assert_eq!(aggregate.average(), Some(7.0));
-    assert_eq!(aggregate.values(), Some((7, 7.0, 7)));
+    assert_eq!(aggregate.values(), Some(MinMaxAvg::new(7, 7.0, 7)));
 }

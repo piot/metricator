@@ -8,7 +8,31 @@ use num_traits::Bounded;
 use num_traits::ToPrimitive;
 use std::cmp::PartialOrd;
 use std::fmt::Debug;
+use std::fmt::Display;
 use std::ops::{Add, Div};
+
+#[derive(Debug, PartialEq)]
+pub struct MinMaxAvg<T: Display> {
+    pub min: T,
+    pub avg: f32,
+    pub max: T,
+}
+
+impl<T: Display> MinMaxAvg<T> {
+    pub const fn new(min: T, avg: f32, max: T) -> Self {
+        Self { min, avg, max }
+    }
+}
+
+impl<T: Display> Display for MinMaxAvg<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "min:{}/s, avg:{}/s, max:{}/s",
+            self.min, self.avg, self.max
+        )
+    }
+}
 
 /// Evaluating how many times something occurs every second.
 #[derive(Debug)]
@@ -114,6 +138,7 @@ where
         + Default
         + From<u8>
         + Debug
+        + Display
         + Bounded
         + ToPrimitive,
 {
@@ -176,9 +201,9 @@ where
     }
 
     /// Returns the minimum, average, and maximum values as a tuple, if available.
-    pub fn values(&self) -> Option<(T, f32, T)> {
+    pub fn values(&self) -> Option<MinMaxAvg<T>> {
         if self.avg_is_set {
-            Some((self.min, self.avg, self.max))
+            Some(MinMaxAvg::new(self.min, self.avg, self.max))
         } else {
             None
         }
