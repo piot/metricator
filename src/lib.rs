@@ -148,7 +148,6 @@ where
         + Copy
         + PartialOrd
         + Default
-        + From<u8>
         + Debug
         + Display
         + Bounded
