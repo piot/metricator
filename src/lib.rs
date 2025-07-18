@@ -29,7 +29,7 @@ impl<T: Display> MinMaxAvg<T> {
         }
     }
 
-    pub fn with_unit(mut self, unit: &'static str) -> Self {
+    pub const fn with_unit(mut self, unit: &'static str) -> Self {
         self.unit = unit;
         self
     }
@@ -64,7 +64,7 @@ impl RateMetric {
     /// # Returns
     ///
     /// A `RateMetric` instance with an initialized count and time.
-    pub fn new(time: Millis) -> Self {
+    #[must_use] pub const fn new(time: Millis) -> Self {
         Self {
             count: 0,
             last_calculated_at: time,
@@ -73,7 +73,7 @@ impl RateMetric {
         }
     }
 
-    pub fn with_interval(time: Millis, measurement_interval: f32) -> Self {
+    #[must_use] pub fn with_interval(time: Millis, measurement_interval: f32) -> Self {
         Self {
             count: 0,
             last_calculated_at: time,
@@ -86,7 +86,7 @@ impl RateMetric {
     /// Increments the internal event count by one.
     ///
     /// Call this method each time an event occurs that you want to track.
-    pub fn increment(&mut self) {
+    pub const fn increment(&mut self) {
         self.count += 1;
     }
 
@@ -95,7 +95,7 @@ impl RateMetric {
     /// # Arguments
     ///
     /// * `count` - The number of events to add.
-    pub fn add(&mut self, count: u32) {
+    pub const fn add(&mut self, count: u32) {
         self.count += count;
     }
 
@@ -121,7 +121,7 @@ impl RateMetric {
         self.average = rate;
     }
 
-    pub fn rate(&self) -> f32 {
+    #[must_use] pub const fn rate(&self) -> f32 {
         self.average
     }
 }
@@ -173,13 +173,13 @@ where
         }
     }
 
-    pub fn with_unit(mut self, unit: &'static str) -> Self {
+    pub const fn with_unit(mut self, unit: &'static str) -> Self {
         self.unit = unit;
         self
     }
 
     /// Calculates the mean value, returning `None` if no values have been added.
-    pub fn average(&self) -> Option<f32> {
+    pub const fn average(&self) -> Option<f32> {
         if self.avg_is_set {
             Some(self.avg)
         } else {
@@ -203,7 +203,7 @@ where
         // Check if the threshold is reached to calculate stats and reset counters
         if self.count >= self.threshold {
             let sum_f32 = self.sum.to_f32().unwrap_or(0.0);
-            let avg_f32 = sum_f32 / self.count as f32;
+            let avg_f32 = sum_f32 / f32::from(self.count);
 
             self.avg = avg_f32;
 
@@ -218,7 +218,7 @@ where
     }
 
     /// Returns the minimum, average, and maximum values as a tuple, if available.
-    pub fn values(&self) -> Option<MinMaxAvg<T>> {
+    pub const fn values(&self) -> Option<MinMaxAvg<T>> {
         if self.avg_is_set {
             Some(MinMaxAvg::new(self.min, self.avg, self.max).with_unit(self.unit))
         } else {
